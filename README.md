@@ -18,4 +18,17 @@ oc apply -f vanilla-sm2/istio.yaml
 oc apply -f vanilla-sm2/app.yaml
 ```
 
-https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/service_mesh/service-mesh-2-x#ossm-member-roll-create-cli_ossm-create-mesh
+##### References
+
+1. [ServiceMesh2 Documention for Openshift 4.18](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/service_mesh/service-mesh-2-x#ossm-member-roll-create-cli_ossm-create-mesh)
+
+
+#### Testing out the warmupDurationSecs in the DestinationRule
+
+#### Allow pods to make requests to external hosts
+
+#### Disable readiness in the istio monitor
+
+##### References
+
+1. [Set port to zero - issues/github](https://github.com/istio/istio/issues/9504#issuecomment-439432130)
