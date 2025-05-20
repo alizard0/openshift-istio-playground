@@ -10,5 +10,12 @@ It deploys a `hello-openshift` application alongside its own service. However, t
 
 This `hop` is configured by `istio-ingressgateway-route` which expects traffic on `http2`, redirects to the service `istio-ingressgateway` which will sends the requests to external-traffic-gw, then routed through external-traffic-vs and finally hits the pod.
 
+##### Deployment
+```bash
+oc apply -f vanilla-sm2/namespace.yaml
+oc apply -f vanilla-sm2/subscription.yaml
+oc apply -f vanilla-sm2/istio.yaml
+oc apply -f vanilla-sm2/app.yaml
+```
 
 https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/service_mesh/service-mesh-2-x#ossm-member-roll-create-cli_ossm-create-mesh
