@@ -1,0 +1,72 @@
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: basic
+  namespace: istio-system
+spec:
+  version: v2.6
+  tracing:
+    type: None
+    sampling: 10000
+  addons:
+    kiali:
+      enabled: true
+      name: kiali
+    grafana:
+      enabled: true
+---
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  members:
+    - vanilla-playground
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: istio-ingressgateway-route 
+  namespace: istio-system
+spec:
+  to:
+    kind: Service
+    name: istio-ingressgateway
+    weight: 100
+  port:
+    targetPort: http2
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: external-traffic-gw
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 8080
+      name: http
+      protocol: HTTP
+    hosts:
+    - '*'
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: external-traffic-vs
+spec:
+  hosts:
+  - '*'
+  gateways:
+    - external-traffic-gw
+  http:
+  - match:
+    - uri:
+        exact: '/'
+    route:
+    - destination:
+        host: hello-openshift
+        port:
+          number: 8080

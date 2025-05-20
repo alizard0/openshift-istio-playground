@@ -1,0 +1,13 @@
+apiVersion: project.openshift.io/v1
+description: "Istio System Namespace"
+displayName: istio-system
+kind: ProjectRequest
+metadata:
+    name: istio-system
+---
+apiVersion: project.openshift.io/v1
+description: "Vanilla Playground Namespace"
+displayName: vanilla-playground
+kind: ProjectRequest
+metadata:
+    name: vanilla-playground
