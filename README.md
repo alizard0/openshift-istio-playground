@@ -29,6 +29,7 @@ oc apply -f vanilla-sm2/app.yaml
 
 #### Disable readiness in the istio monitor
 
-##### References
+When the annotation is `status.sidecar.istio.io/port: "0"` the pod is redeployed and stays in the Creating state which is not desired, the goal is to get the pod running but with a "false" health check.
 
+##### References
 1. [Set port to zero - issues/github](https://github.com/istio/istio/issues/9504#issuecomment-439432130)
