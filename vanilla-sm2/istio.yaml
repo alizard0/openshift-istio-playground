@@ -53,7 +53,7 @@ spec:
   http:
   - match:
     - uri:
-        exact: '/'
+        exact: '/dani'
     route:
     - destination:
         host: hello-openshift

@@ -35,3 +35,41 @@ spec:
   internalTrafficPolicy: Cluster
   selector:
     app: hello-openshift
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-test
+  namespace: vanilla-playground
+  labels:
+    app: curl-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: curl-test
+  template:
+    metadata:
+      labels:
+        app: curl-test
+        sidecar.istio.io/inject: 'true'
+      annotations:
+    spec:
+      containers:
+      - name: curl-container
+        image: curlimages/curl:latest # An image that has curl
+        command: ["sleep", "3600"] # Keep the pod running
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: curl-test
+  namespace: vanilla-playground
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  internalTrafficPolicy: Cluster
+  selector:
+    app: curl-test

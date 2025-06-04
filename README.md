@@ -19,7 +19,7 @@ oc apply -f vanilla-sm2/app.yaml
 ##### Application
 ```bash
 oc project istio-system
-oc get route/istio-ingressgateway
+oc get route/istio-ingressgateway -n istio-system
 # test the istio-ingressgateway url, it should hit the deployed application
 curl istio-ingressgateway-istio-system.apps.cluster-rwkvp.rwkvp.sandbox2991.opentlc.com
 Hello OpenShift!
@@ -38,22 +38,25 @@ the ServiceMeshControlPlane resource controls this behavior. The default value f
 
 1. Define outboundTrafficPolicy.mode = ALLOW_ANY / REGISTRY_ONLY
 ```bash
+$ oc debug deploy/hello-openshift -n vanilla-playground --image=curlimages/curl -- curl -sSI https://www.google.com
+HTTP/2 200
 $ oc get ServiceMEshControlPlane -n istio-system
 NAME    READY   STATUS            PROFILES      VERSION   AGE
 basic   8/8     ComponentsReady   ["default"]   2.6.7     45m
-$ oc edit ServiceMEshControlPlane/basic -n istio-system
-...
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
-spec:
-  proxy:
-    networking:
-      trafficControl:
-        outbound:
-          policy: REGISTRY_ONLY
-...
-$ oc exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com | grep  "HTTP/"; kubectl exec "$SOURCE_POD" -c sleep -- curl -sI https://edition.cnn.com | grep "HTTP/"
-HTTP/2 200
+$ oc patch smcp basic \
+--type merge -n istio-system \
+-p '{"spec":{"proxy":{"networking":{"trafficControl":{"outbound":
+{"policy":"REGISTRY_ONLY"}}}}}}'
+$ oc patch smcp basic \
+--type merge -n istio-system \
+-p '{"spec":{"proxy":{"networking":{"trafficControl":{"outbound":
+{"policy":"ALLOW_ANY"}}}}}}'
+$ oc exec -ti curl-test-6df79c8db6-84b7g -n vanilla-playground -c curl-container -- curl -sSI http://www.google.com
+curl: (35) TLS connect error: error:00000000:lib(0)::reason(0)
+command terminated with exit code 35
+$ oc exec -ti curl-test-6df79c8db6-84b7g -n vanilla-playground -c curl-container -- curl -sSI http://httpbin.org
+curl: (35) TLS connect error: error:00000000:lib(0)::reason(0)
+command terminated with exit code 35
 ```
 2. Create a ServiceEntry resource to register an external service to the mesh.
 ```bash
@@ -65,8 +68,8 @@ spec:
   hosts:
   - httpbin.org
   ports:
-  - number: 443
-    name: https
+  - number: 80
+    name: http
     protocol: HTTPS
   resolution: DNS
   location: MESH_EXTERNAL
@@ -89,7 +92,7 @@ spec:
 ```
 4. Test querying httpbin from the pod
 ```bash
-$ oc exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com | grep  "HTTP/"; kubectl exec "$SOURCE_POD" -c sleep -- curl -sI https://edition.cnn.com | grep "HTTP/"
+$ oc exec "$SOURCE_POD" -c sleep -- curl -sSI https://www.google.com | grep  "HTTP/";
 ```
 
 #### Disable readiness in the istio monitor
@@ -211,6 +214,27 @@ oc exec hello-openshift-5b7bcb9b6d-t8ctp -c istio-proxy curl localhost:15000/con
       }
 ...
 ```
+
+#### Request from an app to another app (no mesh gateway)
+```bash
+# making external call
+alizardo-mac% curl istio-ingressgateway-istio-system.apps.cluster-vgqjw.vgqjw.sandbox34.opentlc.com:80/dani
+Hello OpenShift!
+alizardo-mac% curl istio-ingressgateway-istio-system.apps.cluster-vgqjw.vgqjw.sandbox34.opentlc.com:80/    
+
+# making call against k8s service
+alizardo-mac% oc exec -ti curl-test-6df79c8db6-bgm94 -n vanilla-playground -c curl-container -- curl hello-openshift.vanilla-playground.svc.cluster.local:8080   
+Hello OpenShift!
+alizardo-mac% oc exec -ti curl-test-6df79c8db6-bgm94 -n vanilla-playground -c curl-container -- curl hello-openshift.vanilla-playground.svc.cluster.local:8080
+
+# call against istio ingress service
+alizardo-mac% oc exec -ti curl-test-6df79c8db6-bgm94 -n vanilla-playground -c curl-container -- curl istio-ingressgateway.istio-system.svc.cluster.local:80
+
+alizardo-mac% oc exec -ti curl-test-6df79c8db6-bgm94 -n vanilla-playground -c curl-container -- curl istio-ingressgateway.istio-system.svc.cluster.local:80/dani 
+Hello OpenShift!
+```
+
+> If the gateway is mesh, it works because the routing rules are applied against the pod sidecar, if the gateway is something else, the routing rules are applied against the ingresspod (envoy).
 
 ##### References
 1. [Set port to zero - issues/github](https://github.com/istio/istio/issues/9504#issuecomment-439432130)

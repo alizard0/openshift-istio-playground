@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: hello-openshift-internal-rules # Or any descriptive name
+  namespace: vanilla-playground      # Same namespace as your services
+spec:
+  hosts:
+  - hello-openshift 
+  http:
+  - match:
+    - uri:
+        exact: "/" 
+    headers:
+      request:
+        set:
+          x-internal-mesh-route: "applied"
+    route:
+    - destination:
+        host: hello-openshift
+        port:
+          number: 8080
