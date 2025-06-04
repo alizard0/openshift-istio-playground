@@ -12,7 +12,7 @@ spec:
     metadata:
       labels:
         app: hello-openshift
-        sidecar.istio.io/inject: 'false'
+        sidecar.istio.io/inject: 'true'
       annotations:
         #status.sidecar.istio.io/port: "0"
     spec:
