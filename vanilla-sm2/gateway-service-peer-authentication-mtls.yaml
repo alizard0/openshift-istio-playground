@@ -1,28 +1,3 @@
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
-metadata:
-  name: basic
-  namespace: istio-system
-spec:
-  version: v2.6
-  tracing:
-    type: None
-    sampling: 10000
-  addons:
-    kiali:
-      enabled: true
-      name: kiali
-    grafana:
-      enabled: true
----
-apiVersion: maistra.io/v1
-kind: ServiceMeshMemberRoll
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  members:
-    - vanilla-playground
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
@@ -59,3 +34,12 @@ spec:
         host: hello-openshift
         port:
           number: 8080
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: vanilla-playground # optional
+spec:
+  mtls:
+    mode: STRICT

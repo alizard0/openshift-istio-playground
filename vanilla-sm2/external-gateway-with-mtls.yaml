@@ -1,33 +1,7 @@
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
-metadata:
-  name: basic
-  namespace: istio-system
-spec:
-  version: v2.6
-  tracing:
-    type: None
-    sampling: 10000
-  addons:
-    kiali:
-      enabled: true
-      name: kiali
-    grafana:
-      enabled: true
----
-apiVersion: maistra.io/v1
-kind: ServiceMeshMemberRoll
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  members:
-    - vanilla-playground
----
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: external-gw
+  name: external-traffic-gw
   namespace: vanilla-playground
 spec:
   selector:
@@ -39,6 +13,17 @@ spec:
       protocol: HTTP
     hosts:
     - '*'
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      #mode: SIMPLE
+      mode: MUTUAL
+      credentialName: myhttps-credential
+      caCertificates: istio-system/my-ca-credential
+    hosts:
+    - '*'
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -47,9 +32,10 @@ metadata:
   namespace: vanilla-playground
 spec:
   hosts:
+  #- istio-ingressgateway.istio-system.svc.cluster.local
   - '*'
   gateways:
-    - external-gw
+    - external-traffic-gw
   http:
   - match:
     - uri:
